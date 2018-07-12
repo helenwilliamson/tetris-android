@@ -13,6 +13,7 @@
 (def view (r/adapt-react-class (.-View ReactNative)))
 (def touchable-highlight (r/adapt-react-class (.-TouchableHighlight ReactNative)))
 (def touchable-without-feedback (r/adapt-react-class (.-TouchableWithoutFeedback ReactNative)))
+(def touchable-native-feedback (r/adapt-react-class (.-TouchableNativeFeedback ReactNative)))
 (def text (r/adapt-react-class (.-Text ReactNative)))
 (def button (r/adapt-react-class (.-Button ReactNative)))
 
@@ -20,7 +21,7 @@
 (def rect (r/adapt-react-class (.-Rect ReactSvg)))
 
 (def height 500)
-(def width 400)
+(def width 350)
 
 (def colours ["red" "lime" "yellow" "aqua" "fuchsia" "blue"])
 (def piece-type [:rectangle :square :zig-zag-left :zig-zag-right :t-shape :l-shape])
@@ -203,6 +204,14 @@
   [direction]
   (reset! game-mover (js/setInterval #(swap! game move-piece direction) 50)))
 
+(defn drop-piece
+  [game]
+  (loop [state game]
+    (let [new-state (move-piece state :down)]
+      (if (= state new-state)
+        state
+        (recur new-state)))))
+
 (defn stop-moving
   []
   (js/clearInterval @game-mover))
@@ -215,8 +224,9 @@
       [touchable-highlight {:style {:background-color "#999" :padding 10 :border-radius 5}
                             :on-press #(restart)}
        [text {:style {:color "white" :text-align "center" :font-weight "bold"}} "restart"]]]
-     [view {:style {:align-items "center" :margin 10}}
-      (tetris)]
+     [touchable-native-feedback {:on-press #(swap! game drop-piece)}
+      [view {:style {:align-items "center" :margin 10}}
+       (tetris)]]
      [view {:style {:flex 1 :flex-direction "row" :margin 10 :justify-content "space-between"}}
       [touchable-without-feedback {:on-press-in #(continuously-move :left) :on-press-out #(stop-moving)}
        [view {:style {:background-color "blue" :padding 25 :border-radius 5}}
