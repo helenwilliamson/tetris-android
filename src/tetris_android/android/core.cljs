@@ -29,6 +29,7 @@
 (defonce status (atom ""))
 (defonce game-updater (atom 0))
 (defonce game-mover (atom 0))
+(defonce score (atom 0))
 
 (defn overlaps
   [{first-blocks :blocks} {second-blocks :blocks}]
@@ -60,7 +61,6 @@
 
 (defn clear-complete-row
   [state]
-  (println state)
   (let [xs (set (range 0 width 25))
         blocks (flatten (map :blocks state))
         ys-to-remove (set (keys (filter (fn [[k v]] (empty? (sets/difference xs (set (map :x v))))) (group-by :y blocks))))
@@ -68,8 +68,10 @@
                                        (filter #(not (contains? ys-to-remove (:y %1))))
                                        (map #(assoc %1 :y (+ (:y %1) (* 25 (count (filter (fn [y] (< (:y %1) y)) ys-to-remove))))))
                                        (assoc piece :blocks))) state)]
-    (println ys-to-remove updated)
-    updated))
+    (do
+      (if (seq ys-to-remove)
+        (swap! score #(+ 10 %)))
+      updated)))
 
 (defn update-piece
   [piece]
@@ -183,6 +185,7 @@
   []
   (do
     (js/clearInterval @game-updater)
+    (reset! score 0)
     (reset! game [])
     (gravity)))
 
@@ -208,7 +211,7 @@
   (fn []
     [view {:style {:flex-direction "column"}}
      [view {:style {:flex-direction "row" :margin 10 :justify-content "space-between"}}
-      [text {:style {:padding 10}} "score"]
+      [text {:style {:padding 10}} "score: " @score]
       [touchable-highlight {:style {:background-color "#999" :padding 10 :border-radius 5}
                             :on-press #(restart)}
        [text {:style {:color "white" :text-align "center" :font-weight "bold"}} "restart"]]]
