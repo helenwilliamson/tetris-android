@@ -12,6 +12,7 @@
 (def app-registry (.-AppRegistry ReactNative))
 (def view (r/adapt-react-class (.-View ReactNative)))
 (def touchable-highlight (r/adapt-react-class (.-TouchableHighlight ReactNative)))
+(def touchable-without-feedback (r/adapt-react-class (.-TouchableWithoutFeedback ReactNative)))
 (def text (r/adapt-react-class (.-Text ReactNative)))
 (def button (r/adapt-react-class (.-Button ReactNative)))
 
@@ -27,6 +28,7 @@
 (defonce game (atom []))
 (defonce status (atom ""))
 (defonce game-updater (atom 0))
+(defonce game-mover (atom 0))
 
 (defn overlaps
   [{first-blocks :blocks} {second-blocks :blocks}]
@@ -194,22 +196,35 @@
      (for [block (:blocks piece)]
        (rectangle block (:colour piece))))])
 
+(defn continuously-move
+  [direction]
+  (reset! game-mover (js/setInterval #(swap! game move-piece direction) 50)))
+
+(defn stop-moving
+  []
+  (js/clearInterval @game-mover))
+
 (defn app-root []
   (fn []
-    [view {:style {:flex-direction "column" :margin 40}}
-     [view {:style {:align-items "center"}}
-      (if (= status "Game Over")
-        [touchable-highlight {:style {:background-color "#999" :padding 25 :border-radius 5}
-                              :on-press #(restart)}
-         [text {:style {:color "white" :text-align "center" :font-weight "bold"}} "restart"]])
+    [view {:style {:flex-direction "column"}}
+     [view {:style {:flex-direction "row" :margin 10 :justify-content "space-between"}}
+      [text {:style {:padding 10}} "score"]
+      [touchable-highlight {:style {:background-color "#999" :padding 10 :border-radius 5}
+                            :on-press #(restart)}
+       [text {:style {:color "white" :text-align "center" :font-weight "bold"}} "restart"]]]
+     [view {:style {:align-items "center" :margin 10}}
       (tetris)]
-     [view {:style {:flex 1 :flex-direction "row" :margin 20 :justify-content "space-between"}}
-      [touchable-highlight {:style {:background-color "#999" :padding 25 :border-radius 5}
-                            :on-press #(restart)}
-       [text {:style {:color "white" :text-align "center" :font-weight "bold"}} "left"]]
-      [touchable-highlight {:style {:background-color "#999" :padding 25 :border-radius 5}
-                            :on-press #(restart)}
-       [text {:style {:color "white" :text-align "center" :font-weight "bold"}} "right"]]
+     [view {:style {:flex 1 :flex-direction "row" :margin 10 :justify-content "space-between"}}
+      [touchable-without-feedback {:on-press-in #(continuously-move :left) :on-press-out #(stop-moving)}
+       [view {:style {:background-color "blue" :padding 25 :border-radius 5}}
+        [text {:style {:color "white" :text-align "center" :font-weight "bold"}} "left"]]]
+      [touchable-without-feedback {:on-press-in #(swap! game rotate-piece) :on-press-out #(stop-moving)}
+       [view {:style {:background-color "blue" :padding 25 :border-radius 5}}
+        [text {:style {:color "white" :text-align "center" :font-weight "bold"}} "rotate"]]]
+      [touchable-without-feedback {:style {:background-color "#999" :padding 25 :border-radius 5}
+                            :on-press-in #(continuously-move :right) :on-press-out #(stop-moving)}
+       [view {:style {:background-color "blue" :padding 25 :border-radius 5}}
+        [text {:style {:color "white" :text-align "center" :font-weight "bold"}} "right"]]]
       ]]))
 
 (defn init []
