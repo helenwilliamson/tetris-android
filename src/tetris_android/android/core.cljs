@@ -11,6 +11,10 @@
 
 (def app-registry (.-AppRegistry ReactNative))
 (def view (r/adapt-react-class (.-View ReactNative)))
+(def touchable-highlight (r/adapt-react-class (.-TouchableHighlight ReactNative)))
+(def text (r/adapt-react-class (.-Text ReactNative)))
+
+
 (def svg (r/adapt-react-class (.-Svg ReactSvg)))
 (def rect (r/adapt-react-class (.-Rect ReactSvg)))
 
@@ -166,8 +170,19 @@
      (contains? movement-keys key) (swap! game move-piece (movement-keys key))
      (= 38 key) (swap! game rotate-piece))))
 
-(defonce gravity (reset! game-updater (js/setInterval #(swap! game update-game) 500)))
+(defn gravity
+  []
+  (reset! game-updater (js/setInterval #(swap! game update-game) 500)))
+
+(defonce start (gravity))
 (defonce adder (swap! game add-piece))
+
+(defn restart
+  []
+  (do
+    (js/clearInterval @game-updater)
+    (reset! game [])
+    (gravity)))
 
 (defn rectangle
   [{id :id x :x y :y} colour]
@@ -183,7 +198,11 @@
   (let [greeting (subscribe [:get-greeting])]
     (fn []
       [view {:style {:flex-direction "column" :margin 40 :align-items "center"}}
-       (tetris)])))
+       (tetris)
+       [view {:style {:flex 1 :flex-direction "row" :margin 10}}
+        [touchable-highlight {:style {:background-color "#999" :padding 25 :border-radius 5}
+                             :on-press #(restart)}
+         [text {:style {:color "white" :text-align "center" :font-weight "bold"}} "restart"]]]])))
 
 (defn init []
       (dispatch-sync [:initialize-db])
