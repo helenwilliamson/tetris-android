@@ -2,13 +2,23 @@
 
 A Clojure library designed to ... well, that part is up to you.
 
-## Usage
+## Created
 
-FIXME
+re-natal init TetrisAndroid
 
-## License
+## Added svn library
 
-Copyright © 2018 FIXME
+npm install react-native-svg --save
+react-native link react-native-svg
 
-Distributed under the Eclipse Public License either version 1.0 or (at
-your option) any later version.
+## Running
+
+re-natal enable-auto-require
+re-natal use-android-device avd
+re-natal use-figwheel
+
+lein figwheel android
+
+react-native start
+
+react-native run-android
