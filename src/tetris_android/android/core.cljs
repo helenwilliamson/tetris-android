@@ -13,7 +13,7 @@
 (def view (r/adapt-react-class (.-View ReactNative)))
 (def touchable-highlight (r/adapt-react-class (.-TouchableHighlight ReactNative)))
 (def text (r/adapt-react-class (.-Text ReactNative)))
-
+(def button (r/adapt-react-class (.-Button ReactNative)))
 
 (def svg (r/adapt-react-class (.-Svg ReactSvg)))
 (def rect (r/adapt-react-class (.-Rect ReactSvg)))
@@ -195,14 +195,22 @@
        (rectangle block (:colour piece))))])
 
 (defn app-root []
-  (let [greeting (subscribe [:get-greeting])]
-    (fn []
-      [view {:style {:flex-direction "column" :margin 40 :align-items "center"}}
-       (tetris)
-       [view {:style {:flex 1 :flex-direction "row" :margin 10}}
+  (fn []
+    [view {:style {:flex-direction "column" :margin 40}}
+     [view {:style {:align-items "center"}}
+      (if (= status "Game Over")
         [touchable-highlight {:style {:background-color "#999" :padding 25 :border-radius 5}
-                             :on-press #(restart)}
-         [text {:style {:color "white" :text-align "center" :font-weight "bold"}} "restart"]]]])))
+                              :on-press #(restart)}
+         [text {:style {:color "white" :text-align "center" :font-weight "bold"}} "restart"]])
+      (tetris)]
+     [view {:style {:flex 1 :flex-direction "row" :margin 20 :justify-content "space-between"}}
+      [touchable-highlight {:style {:background-color "#999" :padding 25 :border-radius 5}
+                            :on-press #(restart)}
+       [text {:style {:color "white" :text-align "center" :font-weight "bold"}} "left"]]
+      [touchable-highlight {:style {:background-color "#999" :padding 25 :border-radius 5}
+                            :on-press #(restart)}
+       [text {:style {:color "white" :text-align "center" :font-weight "bold"}} "right"]]
+      ]]))
 
 (defn init []
       (dispatch-sync [:initialize-db])
